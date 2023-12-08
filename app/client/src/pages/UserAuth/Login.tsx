@@ -2,11 +2,12 @@ import React from "react";
 import { Redirect, useLocation } from "react-router-dom";
 import { connect, useSelector } from "react-redux";
 import type { InjectedFormProps, DecoratedFormProps } from "redux-form";
-import { reduxForm, formValueSelector, isDirty } from "redux-form";
+import { reduxForm, formValueSelector, isDirty, Field } from "redux-form";
 import {
   LOGIN_FORM_NAME,
   LOGIN_FORM_EMAIL_FIELD_NAME,
   LOGIN_FORM_PASSWORD_FIELD_NAME,
+  LOGIN_FORM_REMEMBER_FIELD_NAME,
 } from "@appsmith/constants/forms";
 import { FORGOT_PASSWORD_URL, SETUP, SIGN_UP_URL } from "constants/routes";
 import {
@@ -25,9 +26,11 @@ import {
   NEW_TO_APPSMITH,
   createMessage,
   LOGIN_PAGE_SUBTITLE,
+  LOGIN_PAGE_REMEMBER_ME_CHECKBOX_LABEL,
+  FORM_VALIDATION_REMEMBER_ME_VALUE,
 } from "@appsmith/constants/messages";
 import { FormGroup } from "design-system-old";
-import { Button, Link, Callout } from "design-system";
+import { Button, Link, Callout, Checkbox } from "design-system";
 import FormTextField from "components/utils/ReduxFormTextField";
 import ThirdPartyAuth from "pages/UserAuth/ThirdPartyAuth";
 import { isEmail, isEmptyString } from "utils/formhelpers";
@@ -56,6 +59,7 @@ const validate = (values: LoginFormValues, props: ValidateProps) => {
   const errors: LoginFormValues = {};
   const email = values[LOGIN_FORM_EMAIL_FIELD_NAME] || "";
   const password = values[LOGIN_FORM_PASSWORD_FIELD_NAME];
+  const rememberMe = values[LOGIN_FORM_REMEMBER_FIELD_NAME];
   const { isPasswordFieldDirty, touch } = props;
   if (!password || isEmptyString(password)) {
     isPasswordFieldDirty && touch?.(LOGIN_FORM_PASSWORD_FIELD_NAME);
@@ -70,23 +74,41 @@ const validate = (values: LoginFormValues, props: ValidateProps) => {
     );
   }
 
+  if (!rememberMe) {
+    touch?.(LOGIN_FORM_REMEMBER_FIELD_NAME);
+    errors[LOGIN_FORM_REMEMBER_FIELD_NAME] = createMessage(
+      FORM_VALIDATION_REMEMBER_ME_VALUE,
+    );
+  }
+
   return errors;
 };
 
 type LoginFormProps = {
   emailValue: string;
-} & InjectedFormProps<LoginFormValues, { emailValue: string }>;
+  rememberMeValue: boolean;
+} & InjectedFormProps<
+  LoginFormValues,
+  { emailValue: string; rememberMeValue: boolean }
+>;
 
 type ValidateProps = {
   isPasswordFieldDirty?: boolean;
 } & DecoratedFormProps<
   LoginFormValues,
-  { emailValue: string; isPasswordFieldDirty?: boolean }
+  {
+    emailValue: string;
+    rememberMeValue: boolean;
+    isPasswordFieldDirty?: boolean;
+  }
 >;
 
 export function Login(props: LoginFormProps) {
-  const { emailValue: email, error, valid } = props;
-  const isFormValid = valid && email && !isEmptyString(email);
+  const { emailValue: email, error, rememberMeValue, valid } = props;
+  // console.log(email, valid, error, rememberMeValue);
+
+  const isFormValid =
+    valid && email && !isEmptyString(email) && rememberMeValue;
   const location = useLocation();
   const isFormLoginEnabled = useSelector(getIsFormLoginEnabled);
   const socialLoginList = useSelector(getThirdPartyAuths);
@@ -197,19 +219,46 @@ export function Login(props: LoginFormProps) {
               />
             </FormGroup>
 
+            <FormGroup
+              intent={error ? "danger" : "none"}
+              label={createMessage(LOGIN_PAGE_REMEMBER_ME_CHECKBOX_LABEL)}
+            >
+              <Field
+                component={(props: { input: { checked: boolean } }) => {
+                  // console.log(props);
+                  return (
+                    <Checkbox
+                      isSelected={props.input.checked}
+                      name={LOGIN_FORM_REMEMBER_FIELD_NAME}
+                      {...props.input}
+                    >
+                      {createMessage(LOGIN_PAGE_REMEMBER_ME_CHECKBOX_LABEL)}
+                    </Checkbox>
+                  );
+                }}
+                name={LOGIN_FORM_REMEMBER_FIELD_NAME}
+                required
+                type="checkbox"
+              />
+            </FormGroup>
+
             <FormActions>
               <Button
                 isDisabled={!isFormValid}
                 kind="primary"
                 onClick={() => {
+                  // tracking action and log event
+                  // sentry
                   PerformanceTracker.startTracking(
                     PerformanceTransactionName.LOGIN_CLICK,
                   );
+                  // segment
                   AnalyticsUtil.logEvent("LOGIN_CLICK", {
                     loginMethod: "EMAIL",
                   });
                 }}
                 size="md"
+                // it will call into form submit
                 type="submit"
               >
                 {createMessage(LOGIN_PAGE_LOGIN_BUTTON_TEXT)}
@@ -236,8 +285,9 @@ export default connect((state) => ({
     state,
     LOGIN_FORM_PASSWORD_FIELD_NAME,
   ),
+  rememberMeValue: selector(state, LOGIN_FORM_REMEMBER_FIELD_NAME),
 }))(
-  reduxForm<LoginFormValues, { emailValue: string }>({
+  reduxForm<LoginFormValues, { emailValue: string; rememberMeValue: boolean }>({
     validate,
     touchOnBlur: false,
     form: LOGIN_FORM_NAME,

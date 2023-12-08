@@ -11,6 +11,7 @@ export const requiresUnauth = (Component: React.ComponentType) => {
     const user = useSelector(getCurrentUser);
     if (!user) return null;
     if (user?.email && user?.email !== ANONYMOUS_USERNAME) {
+      // console.log("go here first");
       return <Redirect to={APPLICATIONS_URL} />;
     }
     return <Component {...props} />;

@@ -15,12 +15,15 @@ const StyledSetupContainer = styled.div`
   overflow: hidden;
 `;
 
+// ! I will go into you, for show again setup
 function Setup() {
   const user = useSelector(getCurrentUser);
   const [showLandingPage, setShowLandingPage] = useState<boolean>(true);
+
   if (!user?.emptyInstance) {
     return <Redirect to={AUTH_LOGIN_URL} />;
   }
+
   return (
     <StyledSetupContainer>
       {showLandingPage ? (

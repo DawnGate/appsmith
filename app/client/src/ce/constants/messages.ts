@@ -46,6 +46,8 @@ export const APLHANUMERIC_HYPHEN_SLASH_SPACE_ERROR = () =>
 export const FORM_VALIDATION_EMPTY_EMAIL = () => `Please enter an email`;
 export const FORM_VALIDATION_INVALID_EMAIL = () =>
   `Please provide a valid email address`;
+export const FORM_VALIDATION_REMEMBER_ME_VALUE = () =>
+  `Please provide check remember me`;
 export const ENTER_VIDEO_URL = () => `Please provide a valid url`;
 export const ENTER_AUDIO_URL = () => `Please provide a valid url`;
 
@@ -56,6 +58,7 @@ export const FORM_VALIDATION_INVALID_PASSWORD = FORM_VALIDATION_PASSWORD_RULE;
 
 export const LOGIN_PAGE_EMAIL_INPUT_LABEL = () => `Email`;
 export const LOGIN_PAGE_PASSWORD_INPUT_LABEL = () => `Password`;
+export const LOGIN_PAGE_REMEMBER_ME_CHECKBOX_LABEL = () => `Remember me`;
 export const LOGIN_PAGE_EMAIL_INPUT_PLACEHOLDER = () =>
   `Enter your email address`;
 export const LOGIN_PAGE_PASSWORD_INPUT_PLACEHOLDER = () =>
